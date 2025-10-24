@@ -1,0 +1,74 @@
+name: CI with Telegram Notifications
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Send Telegram notification - Start
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          Build Started
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Actor: ${{ github.actor }}
+          
+          Message: ${{ github.event.head_commit.message }}
+
+    # Your build steps here
+    - name: Run tests
+      run: |
+        echo "Running tests..."
+        # Add your test commands here
+        
+    - name: Build project
+      run: |
+        echo "Building project..."
+        # Add your build commands here
+
+    - name: Send Telegram notification - Success
+      if: success()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          Build Successful
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Actor: ${{ github.actor }}
+          
+          View: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    - name: Send Telegram notification - Failure
+      if: failure()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          Build Failed
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Actor: ${{ github.actor }}
+          
+          View logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
